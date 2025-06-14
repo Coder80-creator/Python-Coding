@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Price Comparison Tool</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e9ecef;
+        }
+        .container {
+            max-width: 900px;
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+        h1, h3, h4 {
+            color: #343a40;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        .list-group-item {
+            display: flex;
+            align-items: flex-start;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 15px;
+            border: 1px solid #dee2e6;
+        }
+        .list-group-item .product-image {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-right: 18px;
+            flex-shrink: 0;
+            border: 1px solid #f0f0f0;
+        }
+        .list-group-item .product-details {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .list-group-item .product-details a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        /* Style for the rating/seller info */
+        .product-rating {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        .product-rating .fa-star {
+            color: #f8d64e;
+        }
+        .list-group-item .product-summary-container {
+            margin-top: 10px; background-color: #e2f0fd; border-left: 5px solid #007bff; padding: 10px; border-radius: 5px; font-size: 0.85em; color: #333; display: none;
+        }
+        .list-group-item .product-summary-container.show { display: block; }
+        .list-group-item .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; margin-top: 5px; }
+        .list-group-item .loading-spinner.show { display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .badge { font-size: 1em; padding: 8px 12px; border-radius: 20px; background-color: #28a745; color: #fff; align-self: flex-start; font-weight: 600; }
+        .btn-summary { background-color: #6c757d; border-color: #6c757d; color: #fff; padding: 5px 10px; font-size: 0.85em; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Product Price Comparison Tool</h1>
+
+        <form method="post" class="mt-4">
+            <div class="form-group">
+                <label for="product_name">Product Name</label>
+                <input type="text" class="form-control" id="product_name" name="product_name" required placeholder="e.g., Apple iPhone 15 Pro Max">
+            </div>
+            <button type="submit" class="btn btn-primary">Search for Prices</button>
+        </form>
+
+        <div class="mt-5">
+            <h3>Comparison Results</h3>
+            {% if results.amazon or results.ebay %}
+                <div class="row">
+                    <!-- Amazon Results Column -->
+                    <div class="col-md-6">
+                        <h4>Amazon</h4>
+                        {% if results.amazon %}
+                            <ul class="list-group">
+                                {% for result in results.amazon %}
+                                    <li class="list-group-item">
+                                        <img src="{{ result.image_url }}" alt="{{ result.title }}" class="product-image" onerror="this.onerror=null;this.src='https://placehold.co/100x100/E0E0E0/6C757D?text=Image+Failed';">
+                                        <div class="product-details">
+                                            <a href="{{ result.link }}" target="_blank" rel="noopener noreferrer">{{ result.title }}</a>
+                                            <!-- FIXED: Display Customer Rating from Amazon -->
+                                            <div class="product-rating">
+                                                <i class="fas fa-star"></i> <strong>Customer Rating:</strong> {{ result.customer_rating }}
+                                            </div>
+                                            <span class="badge badge-success">{{ result.price }}</span>
+                                            <button class="btn btn-summary btn-sm" data-title="{{ result.title }}">✨ Get Product Summary</button>
+                                            <div class="loading-spinner"></div>
+                                            <div class="product-summary-container"></div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>No results found on Amazon for this product.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- eBay Results Column -->
+                    <div class="col-md-6">
+                        <h4>eBay</h4>
+                        {% if results.ebay %}
+                            <ul class="list-group">
+                                {% for result in results.ebay %}
+                                    <li class="list-group-item">
+                                        <img src="{{ result.image_url }}" alt="{{ result.title }}" class="product-image" onerror="this.onerror=null;this.src='https://placehold.co/100x100/E0E0E0/6C757D?text=Image+Failed';">
+                                        <div class="product-details">
+                                            <a href="{{ result.link }}" target="_blank" rel="noopener noreferrer">{{ result.title }}</a>
+                                            <!-- FIXED: Display Seller Info from eBay -->
+                                            <div class="product-rating">
+                                                <i class="fas fa-user-check"></i> <strong>Seller Info:</strong> {{ result.seller_info }}
+                                            </div>
+                                            <span class="badge badge-success">{{ result.price }}</span>
+                                            <button class="btn btn-summary btn-sm" data-title="{{ result.title }}">✨ Get Product Summary</button>
+                                            <div class="loading-spinner"></div>
+                                            <div class="product-summary-container"></div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>No results found on eBay for this product.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <p>Enter a product name above to start comparing prices.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.btn-summary').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const productTitle = button.dataset.title;
+                    const summaryContainer = button.nextElementSibling.nextElementSibling;
+                    const loadingSpinner = button.nextElementSibling;
+
+                    summaryContainer.innerHTML = '';
+                    summaryContainer.classList.remove('show');
+                    loadingSpinner.classList.add('show');
+                    button.disabled = true;
+
+                    const prompt = `Provide a concise, 2-3 sentence summary for the product: "${productTitle}". Highlight its main purpose and key features.`;
+
+                    let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                    const payload = { contents: chatHistory };
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) throw new Error(`API call failed with status ${response.status}`);
+
+                        const result = await response.json();
+
+                        if (result.candidates && result.candidates[0].content.parts[0].text) {
+                            summaryContainer.innerHTML = `<p>${result.candidates[0].content.parts[0].text}</p>`;
+                        } else {
+                            summaryContainer.innerHTML = '<p>Could not generate summary. Response format was unexpected.</p>';
+                        }
+                    } catch (error) {
+                        summaryContainer.innerHTML = '<p>Error generating summary. See console for details.</p>';
+                        console.error('Error during Gemini API call:', error);
+                    } finally {
+                        summaryContainer.classList.add('show');
+                        loadingSpinner.classList.remove('show');
+                        button.disabled = false;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
